@@ -1,0 +1,56 @@
+name: Sito (test e pubblicazione)
+
+# Ogni push su main: prima i test, poi la pubblicazione su https://koreshelf.github.io
+# Sulle pull request solo i test. Si può anche avviare a mano (Run workflow).
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Playwright e Chromium (con tentativi se i server di download sono in difficoltà)
+        run: |
+          pip install --retries 5 playwright
+          ok=0
+          for i in 1 2 3; do
+            if python -m playwright install --with-deps chromium; then ok=1; break; fi
+            echo "Tentativo $i non riuscito (errore dei server di download?): riprovo tra 20 secondi"
+            sleep 20
+          done
+          test "$ok" = 1
+      - name: Test del sito
+        run: python tests/test_site.py
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
