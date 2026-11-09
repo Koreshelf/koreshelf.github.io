@@ -165,6 +165,37 @@ figcaption { font-size: 14px; font-style: italic; color: var(--muted); }
 .community { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 20px; }
 .community a { min-height: 44px; display: inline-flex; align-items: center; }
 
+/* --- animazioni ----------------------------------------------------------------
+   Solo dissolvenze e piccoli spostamenti verticali (fluidi anche su telefoni economici,
+   nessuno scorrimento laterale). Niente movimento con "riduci movimento". Si nasconde solo
+   ciò che lo script è pronto a mostrare (html.reveal-ready): senza JavaScript tutto resta visibile. */
+@media (prefers-reduced-motion: no-preference) {
+  /* frontespizio: il logo si posa sulla mensola, poi il resto in sequenza */
+  @keyframes ks-place { from { opacity: 0; transform: translateY(-18px); } 70% { opacity: 1; transform: translateY(2px); } to { opacity: 1; transform: none; } }
+  @keyframes ks-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .hero > * { animation: ks-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .hero > .logo { animation: ks-place 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .hero > :nth-child(2) { animation-delay: 0.25s; }
+  .hero > :nth-child(3) { animation-delay: 0.35s; }
+  .hero > :nth-child(4) { animation-delay: 0.45s; }
+  .hero > :nth-child(5) { animation-delay: 0.6s; }
+  .hero > :nth-child(6) { animation-delay: 0.7s; }
+
+  /* sezioni: compaiono quando arrivano sullo schermo, in sequenza (--i) */
+  [data-reveal] {
+    transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition-delay: calc(var(--i, 0) * 90ms);
+  }
+  .reveal-ready [data-reveal]:not(.is-visible) { opacity: 0; transform: translateY(18px); }
+  .reveal-ready [data-reveal="plate"]:not(.is-visible) { transform: translateY(18px) scale(0.97); }
+  /* fregio: le linee si allungano dal centro, come un filetto tracciato a mano */
+  .ornament span { transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.15s; }
+  .reveal-ready .ornament:not(.is-visible) { transform: none; }
+  .reveal-ready .ornament:not(.is-visible) span { transform: scaleX(0); }
+  .ornament span:first-child { transform-origin: right; }
+  .ornament span:last-child { transform-origin: left; }
+}
+
 /* --- telefono: versione C (schede da sfogliare, pulsanti chiari) ---------------- */
 @media (max-width: 640px) {
   body { font-size: 17px; }

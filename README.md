@@ -8,6 +8,10 @@ Il sito di [KoreShelf](https://github.com/GabrieleTrovato01/KoreShelf): da qui l
 - **Download sempre aggiornati**: i pulsanti chiedono a GitHub qual è l'ultima release e puntano ai suoi file.
   Se GitHub non risponde portano alla pagina delle release, quindi non si rompono mai.
 - **Il dispositivo di chi visita** viene riconosciuto: il pulsante grande propone il file giusto.
+- **Animazioni leggere**: il frontespizio entra in sequenza e le sezioni compaiono scorrendo. Niente
+  movimento con "riduci movimento" attivo; senza JavaScript tutto resta visibile.
+- **Telefono**: intestazione compatta, capitoli in schede da sfogliare (scorrono da sole, con pausa)
+  e pulsanti "Scarica" chiari, con quello del proprio dispositivo in evidenza.
 - **Privacy**: nessun servizio esterno (niente Google Fonts, statistiche o CDN). L'unica richiesta
   fuori dal sito è quella a GitHub per conoscere l'ultima versione.
 

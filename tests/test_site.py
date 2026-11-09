@@ -563,6 +563,70 @@ async def test_phone_download_index_uses_clear_buttons(p):
     assert not problems, "\n".join(problems)
 
 
+REVEAL_STATE = """() => [...document.querySelectorAll('[data-reveal]')].map(e => {
+    const r = e.getBoundingClientRect();
+    return { op: parseFloat(getComputedStyle(e).opacity), onScreen: r.top < innerHeight && r.bottom > 0,
+             what: (e.className || e.tagName) + ':' + (e.innerText || '').trim().slice(0, 20) }; })"""
+
+
+async def test_sections_animate_into_view(p):
+    """Animazioni: all'apertura il frontespizio entra in sequenza; scorrendo, ogni sezione compare
+    quando arriva sullo schermo (prima è nascosta, poi visibile). Vale per capitoli, fregio, indice
+    dei download e piè di pagina."""
+    problems = []
+    with Site() as site:
+        browser, ctx, page = await open_site(p, site, os_="win", viewport=(1280, 800))
+        hero = await page.evaluate("[...document.querySelectorAll('.hero > *')].map(e => getComputedStyle(e).animationName)")
+        if not hero or any(n in ("", "none") for n in hero):
+            problems.append(f"Il frontespizio deve entrare con un'animazione (animationName: {hero})")
+        await page.wait_for_timeout(1500)
+        before = await page.evaluate(REVEAL_STATE)
+        if len(before) < 12:
+            problems.append(f"Troppo pochi elementi animati ({len(before)}): capitoli, fregio, download, piè di pagina")
+        below = [e for e in before if not e["onScreen"]]
+        shown_early = [e["what"] for e in below if e["op"] > 0.05]
+        if not below or shown_early:
+            problems.append(f"Gli elementi fuori schermo devono aspettare di essere visti: già visibili {shown_early[:4]}")
+        for y in range(0, 6000, 400):                       # si scorre come una persona
+            await page.evaluate(f"window.scrollTo(0, {y})")
+            await page.wait_for_timeout(120)
+        await page.wait_for_timeout(1200)
+        after = await page.evaluate(REVEAL_STATE)
+        hidden = [e["what"] for e in after if e["op"] < 0.99]
+        if hidden:
+            problems.append(f"Dopo aver scorso tutta la pagina devono essere tutti visibili: {hidden[:5]}")
+        await browser.close()
+    assert not problems, "\n".join(problems)
+
+
+async def test_animations_respect_reduced_motion_and_never_hide_content(p):
+    """Con "riduci movimento" nessuna animazione e tutto subito visibile. Senza JavaScript (o se lo
+    script non parte) niente resta nascosto: si nasconde solo ciò che lo script è pronto ad animare."""
+    problems = []
+    with Site() as site:
+        browser = await p.chromium.launch(executable_path=os.environ.get("CHROME_PATH") or None)
+        for label, opts in (("riduci movimento", {"reduced_motion": "reduce"}), ("senza JavaScript", {"java_script_enabled": False})):
+            ctx = await browser.new_context(viewport={"width": 1280, "height": 800}, locale="it-IT", **opts)
+            await ctx.route("https://api.github.com/**", lambda r: r.fulfill(status=200, content_type="application/json", body=json.dumps(RELEASE_4)))
+            page = await ctx.new_page()
+            await page.goto(site.url)
+            await page.wait_for_timeout(400)
+            state = await page.evaluate(REVEAL_STATE)
+            moving = await page.evaluate("""() => [...document.querySelectorAll('.hero > *, [data-reveal]')]
+                .filter(e => { const cs = getComputedStyle(e); return (cs.animationName !== 'none' && parseFloat(cs.animationDuration) > 0)
+                    || parseFloat(cs.transitionDuration) > 0; }).length""")
+            hidden = [e["what"] for e in state if e["op"] < 0.99]
+            if not state:
+                problems.append(f"{label}: nessun elemento marcato data-reveal")
+            if hidden:
+                problems.append(f"{label}: contenuto nascosto senza motivo: {hidden[:5]}")
+            if label == "riduci movimento" and moving:
+                problems.append(f"{label}: {moving} elementi si muovono ancora")
+            await ctx.close()
+        await browser.close()
+    assert not problems, "\n".join(problems)
+
+
 def test_workflow_tests_then_publishes_only_the_site():
     """Il workflow pubblica su GitHub Pages solo dopo che questi test sono passati, solo dal ramo
     main e solo la cartella site/ (i test non finiscono online). Il download di Chromium ritenta

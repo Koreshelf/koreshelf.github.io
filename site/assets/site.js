@@ -153,6 +153,24 @@
     }, window.__ksCarouselMs || 5000);
   }
 
+
+  // --- Animazioni: ogni sezione compare quando arriva sullo schermo -----------------
+  // La classe reveal-ready (che nasconde gli elementi in attesa) si mette solo quando
+  // l'osservatore è pronto: senza JavaScript, o se qualcosa va storto, tutto resta visibile.
+  function setupReveal() {
+    var els = $$('[data-reveal]');
+    if (!els.length || reduceMotion.matches || !('IntersectionObserver' in window)) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        io.unobserve(entry.target);
+      });
+    }, { rootMargin: '0px 0px -6% 0px', threshold: 0.12 });
+    els.forEach(function (el) { io.observe(el); });
+    document.documentElement.classList.add('reveal-ready');
+  }
+
   // --- Disegno della pagina -----------------------------------------------------
   var os = detectOS();
   var release = null;
@@ -227,6 +245,7 @@
     });
 
     setupCarousel();
+    setupReveal();
     if (phone.addEventListener) phone.addEventListener('change', langLabels);
 
     loadRelease().then(function (info) { release = info; render(); });
