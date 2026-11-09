@@ -81,6 +81,78 @@
       .catch(function () { return null; });            // i link restano sulla pagina delle release
   }
 
+
+  // --- Telefono: sigla della lingua e carosello dei capitoli -------------------------
+  var phone = window.matchMedia ? matchMedia('(max-width: 640px)') : { matches: false };
+  var reduceMotion = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+  var langNames = {};
+
+  function langLabels() {          // sul telefono la sigla (IT), su computer il nome (Italiano)
+    var select = $('#lang');
+    if (!select) return;
+    Array.prototype.forEach.call(select.options, function (o) {
+      if (!langNames[o.value]) langNames[o.value] = o.text;
+      o.text = phone.matches ? o.value.toUpperCase() : langNames[o.value];
+    });
+  }
+
+  var carousel = { paused: false, quietUntil: 0, visible: true };
+
+  function carouselCards() { var c = $('#chapters'); return c ? Array.prototype.slice.call(c.children).filter(function (e) { return e.tagName === 'ARTICLE'; }) : []; }
+  function carouselIndex() {
+    var track = $('#chapters'), cards = carouselCards(), mid = track.scrollLeft + track.clientWidth / 2, best = 0, dist = Infinity;
+    cards.forEach(function (card, i) {
+      var d = Math.abs(card.offsetLeft + card.offsetWidth / 2 - mid);
+      if (d < dist) { dist = d; best = i; }
+    });
+    return best;
+  }
+  function carouselGo(i) {
+    var track = $('#chapters'), card = carouselCards()[i];
+    if (!card) return;
+    track.scrollTo({ left: card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+  }
+  function carouselDots() {
+    var active = carouselIndex();
+    $$('.carousel-dots button').forEach(function (b, i) {
+      if (i === active) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
+    });
+  }
+  function carouselLabels() {
+    var btn = $('#carousel-pause');
+    if (!btn) return;
+    btn.setAttribute('aria-label', t(carousel.paused ? 'carousel_play' : 'carousel_pause'));
+    btn.classList.toggle('paused', carousel.paused);
+  }
+  function carouselQuiet() { carousel.quietUntil = Date.now() + 15000; }   // chi tocca le schede le sta leggendo
+
+  function setupCarousel() {
+    var track = $('#chapters');
+    if (!track || !carouselCards().length) return;
+    var ticking = false;
+    track.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () { ticking = false; carouselDots(); });
+    }, { passive: true });
+    ['pointerdown', 'touchstart', 'wheel', 'keydown', 'focusin'].forEach(function (ev) {
+      track.addEventListener(ev, carouselQuiet, { passive: true });
+    });
+    $$('.carousel-dots button').forEach(function (b, i) {
+      b.addEventListener('click', function () { carouselQuiet(); carouselGo(i); });
+    });
+    var btn = $('#carousel-pause');
+    if (btn) btn.addEventListener('click', function () { carousel.paused = !carousel.paused; carouselLabels(); });
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) { carousel.visible = entries[0].isIntersecting; }, { threshold: 0.4 }).observe(track);
+    }
+    setInterval(function () {
+      if (!phone.matches || reduceMotion.matches || carousel.paused || !carousel.visible || document.hidden) return;
+      if (Date.now() < carousel.quietUntil) return;
+      carouselGo((carouselIndex() + 1) % carouselCards().length);
+    }, window.__ksCarouselMs || 5000);
+  }
+
   // --- Disegno della pagina -----------------------------------------------------
   var os = detectOS();
   var release = null;
@@ -103,6 +175,8 @@
     if (desc) desc.setAttribute('content', t('meta_description'));
     var select = $('#lang');
     if (select) select.value = lang;
+    langLabels();
+    carouselLabels();
     setTheme(currentTheme(), false);
 
     var files = (release && release.files) || {};
@@ -151,6 +225,9 @@
     if (media && media.addEventListener) media.addEventListener('change', function (e) {
       if (!store.get('ks-theme')) setTheme(e.matches ? 'dark' : 'light', false);
     });
+
+    setupCarousel();
+    if (phone.addEventListener) phone.addEventListener('change', langLabels);
 
     loadRelease().then(function (info) { release = info; render(); });
   }

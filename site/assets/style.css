@@ -28,6 +28,7 @@
   --frame: #ffffff;
   --shadow: rgba(30, 45, 59, 0.18);
   --logo-glow: transparent;
+  --card: #fbf8f1;
   color-scheme: light;
 }
 :root[data-theme="dark"] {
@@ -47,6 +48,7 @@
   --frame: #22324a;
   --shadow: rgba(0, 0, 0, 0.55);
   --logo-glow: rgba(212, 175, 55, 0.22);
+  --card: #182838;
   color-scheme: dark;
 }
 
@@ -154,22 +156,93 @@ figcaption { font-size: 14px; font-style: italic; color: var(--muted); }
 .steps { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 8px; }
 .dl-ipa { align-self: flex-start; }
 
+.dl svg, .dl-short { display: none; }
+.carousel-controls, .swipe-hint { display: none; }
+
 /* --- piè di pagina -------------------------------------------------------- */
 .footer { padding-top: 48px; padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; font-size: 15px; color: var(--muted); }
 .colophon { font-style: italic; }
 .community { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 20px; }
 .community a { min-height: 44px; display: inline-flex; align-items: center; }
 
-/* --- telefono ------------------------------------------------------------- */
+/* --- telefono: versione C (schede da sfogliare, pulsanti chiari) ---------------- */
 @media (max-width: 640px) {
   body { font-size: 17px; }
   .wrap, .narrow, .hero { padding-left: 20px; padding-right: 20px; }
-  .nav-link { display: none; }                 /* GitHub resta nel piè di pagina */
-  .hero { padding-top: 48px; }
-  .logo { height: 120px; }
-  .lead { font-size: 19px; }
+
+  /* intestazione su una riga: nome, lingua (sigla), tema */
+  .top-row { flex-wrap: nowrap; padding-top: 10px; padding-bottom: 10px; }
+  .nav { flex-wrap: nowrap; gap: 8px; }
+  .nav-link, .nav .btn-small { display: none; }       /* GitHub resta nel piè di pagina */
+  .lang { border-radius: 22px; padding: 0 10px; font-weight: 600; }
+
+  .hero { padding-top: 32px; padding-bottom: 36px; gap: 16px; }
+  .logo { height: 104px; }
+  .kicker { font-size: 13px; letter-spacing: 0.14em; text-wrap: balance; }
+  h1 { font-size: 34px; }
+  .lead { font-size: 18px; }
   .btn-big { width: 100%; }
-  .chapters { gap: 64px; }
+  .ornament { display: none; }
+
+  /* capitoli: schede da sfogliare di lato, la successiva sbuca dal bordo */
+  .chapters-band { background: var(--bg-2); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 24px 0 12px; }
+  #chapters.chapters {
+    position: relative; max-width: none; margin: 0;
+    flex-direction: row; gap: 14px; padding: 0 42px 10px;
+    overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 42px;
+    scrollbar-width: none; overscroll-behavior-x: contain;
+  }
+  #chapters.chapters::-webkit-scrollbar { display: none; }
+  #chapters > article {
+    flex: 0 0 calc(100vw - 84px); max-width: 340px; scroll-snap-align: center;
+    background: var(--card); border-radius: 10px; box-shadow: 0 2px 0 var(--rule), 0 12px 26px var(--shadow);
+    padding: 20px 18px; display: flex; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 10px;
+    margin: 0; text-align: left;
+  }
+  #chapters .chapter-text { display: contents; }       /* occhiello, titolo, immagine, testo */
+  #chapters .label { order: 1; font-size: 13px; }
+  #chapters h2 { order: 2; font-size: 26px; }
+  #chapters .plate { order: 3; flex: none; }
+  #chapters article p:not(.label) { order: 4; font-size: 16px; line-height: 1.55; }
+  #chapters figcaption { display: none; }
+  /* immagini della stessa forma, così le schede non restano mezze vuote */
+  #chapters .plate img { display: block; width: 100%; aspect-ratio: 16 / 11; object-fit: cover; object-position: top; border-width: 4px; border-radius: 6px; }
+  #chapters .plate-phones img:first-child { display: none; }   /* nella scheda basta la bacheca */
+  #chapters .plate-phones img:last-of-type { object-position: center 38%; }   /* inquadra i post-it, non la barra in alto */
+
+  .carousel-controls { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 6px; }
+  .carousel-dots { display: flex; }
+  .carousel-dots button {
+    width: 44px; height: 44px; padding: 0; border: 0; background: transparent; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .carousel-dots button::before { content: ""; width: 8px; height: 8px; border-radius: 4px; background: var(--leader); transition: width 0.2s; }
+  .carousel-dots button[aria-current="true"]::before { width: 22px; background: var(--accent); }
+  #carousel-pause .i-play, #carousel-pause.paused .i-pause { display: none; }
+  #carousel-pause.paused .i-play { display: block; }
+  .swipe-hint { display: block; text-align: center; font-size: 14px; font-style: italic; color: var(--muted); }
+
+  /* indice dei download: veri pulsanti; quello del proprio dispositivo è pieno */
+  .downloads { padding: 36px 0; }
+  .index { gap: 10px; }
+  .index li { margin: 0; padding: 12px 14px; background: var(--bg); border-radius: 8px; }
+  .entry { display: grid; grid-template-columns: 1fr auto; column-gap: 12px; row-gap: 2px; align-items: center; font-size: 18px; }
+  .entry .os { grid-column: 1; grid-row: 1; }
+  .index li:not([aria-current="true"]) .entry .os { grid-row: 1 / span 2; }   /* senza etichetta: centrato */
+  .entry .badge { grid-column: 1; grid-row: 2; justify-self: start; font-size: 11px; padding: 1px 6px; }
+  .entry .dl { grid-column: 2; grid-row: 1 / span 2; }
+  .leader { display: none; }
+  .dl {
+    margin-left: auto; flex: none; gap: 8px; padding: 0 16px; border-radius: 6px;
+    border: 1.5px solid var(--accent); color: var(--accent); text-decoration: none; font-size: 16px;
+  }
+  .dl svg, .dl-short { display: inline; }
+  .dl-long { display: none; }
+  .index li[aria-current="true"] .dl { background: var(--accent); color: var(--on-accent); }
+  .index .hint { display: none; }
+  .index li[aria-current="true"] .hint { display: block; margin-top: 6px; }
+  .ios h3 { font-size: 22px; }
+
+  .community { gap: 0 16px; }
   .plate-phones img { width: calc(50% - 10px); }
-  .ornament span { width: 70px; }
 }

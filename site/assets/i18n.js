@@ -61,7 +61,14 @@ window.KS_I18N = {
     all_versions: "Tutte le versioni e le novità sono su GitHub.",
     alt_board: "La bacheca di KoreShelf sul telefono, con due frasi sottolineate sui post-it",
     colophon_a: "Colophon — KoreShelf è scritto da",
-    colophon_b: "e distribuito con licenza MIT. Composto in Literata."
+    colophon_b: "e distribuito con licenza MIT. Composto in Literata.",
+    dl_btn_short: "Scarica",
+    swipe_hint: "Sfoglia con il dito, come nell’app",
+    carousel_pause: "Ferma lo scorrimento automatico",
+    carousel_play: "Riprendi lo scorrimento automatico",
+    carousel_goto_1: "Vai al capitolo 1",
+    carousel_goto_2: "Vai al capitolo 2",
+    carousel_goto_3: "Vai al capitolo 3"
   },
   en: {
     meta_title: "KoreShelf — your ebook library, free and open source",
@@ -124,7 +131,14 @@ window.KS_I18N = {
     all_versions: "All versions and release notes are on GitHub.",
     alt_board: "The KoreShelf board on a phone, with two underlined sentences on sticky notes",
     colophon_a: "Colophon — KoreShelf is written by",
-    colophon_b: "and released under the MIT license. Set in Literata."
+    colophon_b: "and released under the MIT license. Set in Literata.",
+    dl_btn_short: "Download",
+    swipe_hint: "Swipe with your finger, like in the app",
+    carousel_pause: "Pause automatic scrolling",
+    carousel_play: "Resume automatic scrolling",
+    carousel_goto_1: "Go to chapter 1",
+    carousel_goto_2: "Go to chapter 2",
+    carousel_goto_3: "Go to chapter 3"
   },
   de: {
     meta_title: "KoreShelf — deine E-Book-Bibliothek, kostenlos und Open Source",
@@ -187,7 +201,14 @@ window.KS_I18N = {
     all_versions: "Alle Versionen und Neuerungen findest du auf GitHub.",
     alt_board: "Die KoreShelf-Pinnwand auf dem Handy, mit zwei markierten Sätzen auf Haftnotizen",
     colophon_a: "Kolophon — KoreShelf wird von",
-    colophon_b: "geschrieben und unter der MIT-Lizenz veröffentlicht. Gesetzt in Literata."
+    colophon_b: "geschrieben und unter der MIT-Lizenz veröffentlicht. Gesetzt in Literata.",
+    dl_btn_short: "Herunterladen",
+    swipe_hint: "Mit dem Finger blättern, wie in der App",
+    carousel_pause: "Automatisches Blättern anhalten",
+    carousel_play: "Automatisches Blättern fortsetzen",
+    carousel_goto_1: "Zu Kapitel 1",
+    carousel_goto_2: "Zu Kapitel 2",
+    carousel_goto_3: "Zu Kapitel 3"
   },
   fr: {
     meta_title: "KoreShelf — votre bibliothèque d’ebooks, gratuite et open source",
@@ -250,7 +271,14 @@ window.KS_I18N = {
     all_versions: "Toutes les versions et nouveautés sont sur GitHub.",
     alt_board: "Le tableau de KoreShelf sur téléphone, avec deux phrases soulignées sur des post-it",
     colophon_a: "Colophon — KoreShelf est écrit par",
-    colophon_b: "et distribué sous licence MIT. Composé en Literata."
+    colophon_b: "et distribué sous licence MIT. Composé en Literata.",
+    dl_btn_short: "Télécharger",
+    swipe_hint: "Faites défiler du doigt, comme dans l’app",
+    carousel_pause: "Mettre en pause le défilement automatique",
+    carousel_play: "Reprendre le défilement automatique",
+    carousel_goto_1: "Aller au chapitre 1",
+    carousel_goto_2: "Aller au chapitre 2",
+    carousel_goto_3: "Aller au chapitre 3"
   },
   es: {
     meta_title: "KoreShelf — tu biblioteca de ebooks, gratis y de código abierto",
@@ -313,6 +341,13 @@ window.KS_I18N = {
     all_versions: "Todas las versiones y novedades están en GitHub.",
     alt_board: "El tablón de KoreShelf en el móvil, con dos frases subrayadas en notas adhesivas",
     colophon_a: "Colofón — KoreShelf está escrito por",
-    colophon_b: "y se distribuye con licencia MIT. Compuesto en Literata."
+    colophon_b: "y se distribuye con licencia MIT. Compuesto en Literata.",
+    dl_btn_short: "Descargar",
+    swipe_hint: "Desliza con el dedo, como en la app",
+    carousel_pause: "Pausar el desplazamiento automático",
+    carousel_play: "Reanudar el desplazamiento automático",
+    carousel_goto_1: "Ir al capítulo 1",
+    carousel_goto_2: "Ir al capítulo 2",
+    carousel_goto_3: "Ir al capítulo 3"
   }
 };

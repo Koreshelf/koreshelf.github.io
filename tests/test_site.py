@@ -387,6 +387,182 @@ async def test_reading_chapter_shows_the_highlights_board(p):
     assert "bacheca" in board[0][2].lower(), f"Il testo alternativo deve dire che è la bacheca: {board[0][2]!r}"
 
 
+PHONE = (390, 844)
+
+
+async def test_phone_header_is_one_compact_row(p):
+    """Telefono: l'intestazione sta su una riga (nome, lingua compatta, tema). Niente pulsante
+    "Scarica" in alto: il pulsante grande è subito sotto. Il menu lingua mostra la sigla (IT)."""
+    problems = []
+    with Site() as site:
+        browser, ctx, page = await open_site(p, site, os_="android", viewport=PHONE)
+        got = await page.evaluate("""() => { const h = document.querySelector('.top'), s = document.querySelector('#lang');
+            const nav = document.querySelector('.top .btn-small');
+            return { height: Math.round(h.getBoundingClientRect().height), shown: s.options[s.selectedIndex].text,
+                     label: s.getAttribute('aria-label'), navBtn: nav ? getComputedStyle(nav).display : 'none' }; }""")
+        await browser.close()
+    if got["height"] > 72:
+        problems.append(f"L'intestazione è alta {got['height']} px: deve stare su una riga (≤ 72 px)")
+    if got["shown"] != "IT":
+        problems.append(f"Il menu lingua deve mostrare la sigla 'IT', mostra {got['shown']!r}")
+    if not got["label"]:
+        problems.append("Con la sola sigla, il menu lingua deve avere un aria-label (es. 'Lingua')")
+    if got["navBtn"] != "none":
+        problems.append("Sul telefono il pulsante 'Scarica' dell'intestazione va nascosto")
+    assert not problems, "\n".join(problems)
+
+
+CAROUSEL = """() => { const c = document.querySelector('#chapters');
+    const cards = [...c.querySelectorAll(':scope > article')];
+    const order = cards.map(card => {
+        const top = sel => { const e = card.querySelector(sel); if (!e || !e.offsetParent) return null;
+                             return Math.round(e.getBoundingClientRect().top); };
+        const img = [...card.querySelectorAll('img')].find(i => i.offsetParent);
+        return { label: top('.label'), title: top('h2'), image: img ? Math.round(img.getBoundingClientRect().top) : null,
+                 text: top('p:not(.label)') }; });
+    const cs = getComputedStyle(c);
+    return { scrollable: c.scrollWidth > c.clientWidth + 10, snap: cs.scrollSnapType, left: Math.round(c.scrollLeft),
+             cardW: Math.round(cards[0].getBoundingClientRect().width), secondLeft: Math.round(cards[1].getBoundingClientRect().left),
+             order, active: [...document.querySelectorAll('.carousel-dots button')].findIndex(b => b.getAttribute('aria-current') === 'true'),
+             dots: [...document.querySelectorAll('.carousel-dots button')].map(b => { const r = b.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; }) }; }"""
+
+
+async def test_phone_chapters_are_a_carousel_of_cards(p):
+    """Telefono: i tre capitoli sono schede da sfogliare di lato (aggancio a ogni scheda), la scheda
+    dopo sbuca dal bordo, e in ogni scheda l'ordine è occhiello, titolo, immagine, testo (oggi nel
+    Capitolo II le immagini finiscono sopra il titolo). Pallini toccabili (44 px). Su computer niente carosello."""
+    problems = []
+    with Site() as site:
+        browser, ctx, page = await open_site(p, site, os_="android", viewport=PHONE)
+        await page.locator("#chapters").scroll_into_view_if_needed()
+        got = await page.evaluate(CAROUSEL)
+        await shot(page, "phone_carousel")
+        await browser.close()
+        if not got["scrollable"] or "x" not in (got["snap"] or ""):
+            problems.append(f"I capitoli devono scorrere di lato con aggancio (scroll-snap x): {got['snap']}, scorrevole {got['scrollable']}")
+        if not (got["cardW"] < PHONE[0] - 40 and got["secondLeft"] < PHONE[0]):
+            problems.append(f"La scheda dopo deve sbucare dal bordo (larghezza {got['cardW']}, seconda a {got['secondLeft']})")
+        for i, o in enumerate(got["order"], 1):
+            seq = [o["label"], o["title"]] + ([o["image"]] if o["image"] is not None else []) + [o["text"]]
+            if None in seq[:2] or o["text"] is None or seq != sorted(seq):
+                problems.append(f"Capitolo {i}: ordine sbagliato (occhiello, titolo, immagine, testo): {o}")
+        if len(got["dots"]) != 3 or any(w < 44 or h < 44 for w, h in got["dots"]):
+            problems.append(f"Servono 3 pallini toccabili da almeno 44 px: {got['dots']}")
+        browser, ctx, page = await open_site(p, site, os_="win")
+        desk = await page.evaluate("() => { const c = document.querySelector('#chapters'); return [c.scrollWidth > c.clientWidth + 10, !!document.querySelector('.carousel-dots') && document.querySelector('.carousel-dots').offsetParent !== null]; }")
+        await browser.close()
+        if any(desk):
+            problems.append(f"Su computer i capitoli non devono essere un carosello: {desk}")
+    assert not problems, "\n".join(problems)
+
+
+async def positions(page, ms):
+    """Posizione del carosello campionata ogni 150 ms: con 3 schede, confrontare solo inizio e fine
+    non basta (in un giro completo si torna alla stessa scheda)."""
+    out = []
+    for _ in range(max(1, ms // 150)):
+        out.append(await page.evaluate("Math.round(document.querySelector('#chapters').scrollLeft)"))
+        await page.wait_for_timeout(150)
+    return out
+
+
+async def test_phone_carousel_moves_by_itself_and_can_be_stopped(p):
+    """Le schede scorrono da sole. Il pulsante pausa le ferma (e dice cosa fa), toccarle le ferma,
+    e con "riduci movimento" attivo nel telefono non partono. (Nel test il giro dura 0,8 s.)"""
+    problems = []
+    fast = "window.__ksCarouselMs = 800;"
+    with Site() as site:
+        browser = await p.chromium.launch(executable_path=os.environ.get("CHROME_PATH") or None)
+        for motion in ("no-preference", "reduce"):
+            ctx = await browser.new_context(user_agent=UA["android"], locale="it-IT", viewport={"width": PHONE[0], "height": PHONE[1]},
+                                            is_mobile=True, has_touch=True, reduced_motion=motion)
+            await ctx.route("https://api.github.com/**", lambda r: r.fulfill(status=200, content_type="application/json", body=json.dumps(RELEASE_4)))
+            await ctx.add_init_script(fast)
+            page = await ctx.new_page()
+            await page.goto(site.url)
+            await page.locator("#chapters").scroll_into_view_if_needed()
+            seen = await positions(page, 1900)
+            moved = len(set(seen)) > 1
+            if motion == "reduce":
+                if moved:
+                    problems.append(f"Con 'riduci movimento' le schede non devono muoversi da sole: {seen}")
+                await ctx.close()
+                continue
+            if not moved:
+                problems.append(f"Le schede devono scorrere da sole: sempre ferme a {seen[0]}")
+            btn = page.locator("#carousel-pause")
+            if not await btn.count():
+                problems.append("Manca il pulsante pausa #carousel-pause")
+                await ctx.close()
+                continue
+            label_on = await btn.get_attribute("aria-label")
+            await btn.click()
+            label_off = await btn.get_attribute("aria-label")
+            if not label_on or label_on == label_off:
+                problems.append(f"Il pulsante pausa deve dire cosa fa e cambiare scritta: {label_on!r} → {label_off!r}")
+            await page.wait_for_timeout(600)          # finisce lo scorrimento eventualmente in corso
+            seen = await positions(page, 1900)
+            if len(set(seen)) > 1:
+                problems.append(f"Dopo la pausa le schede devono restare ferme: {seen}")
+            await btn.click()                                   # riprende
+            await page.wait_for_timeout(200)
+            await page.locator("#chapters h2").first.scroll_into_view_if_needed()   # si tocca una scheda che si vede
+            box = await page.locator("#chapters").bounding_box()
+            assert 0 <= box["y"] + 60 <= PHONE[1], f"Il punto toccato deve essere sullo schermo: {box}"
+            await page.touchscreen.tap(box["x"] + box["width"] / 2, box["y"] + 60)   # chi legge tocca una scheda
+            await page.wait_for_timeout(600)          # finisce l'eventuale scorrimento già partito prima del tocco
+            seen = await positions(page, 1900)
+            if len(set(seen)) > 1:
+                problems.append(f"Quando si tocca una scheda lo scorrimento automatico deve fermarsi: {seen}")
+            await ctx.close()
+        await browser.close()
+    assert not problems, "\n".join(problems)
+
+
+async def test_phone_download_index_uses_clear_buttons(p):
+    """Telefono: nell'indice ogni riga ha un vero pulsante "Scarica" (non il nome del file). Quello
+    del dispositivo di chi visita è pieno e colorato, gli altri solo bordati, come nella proposta A.
+    Il nome del file resta per i lettori di schermo; la nota di installazione si vede solo per il
+    proprio dispositivo. Su computer le scritte restano quelle lunghe (Scarica .exe)."""
+    problems = []
+    with Site() as site:
+        browser, ctx, page = await open_site(p, site, os_="android", viewport=PHONE)
+        await page.locator("#downloads").scroll_into_view_if_needed()
+        rows = await page.evaluate("""() => [...document.querySelectorAll('#downloads [data-os]')].map(row => {
+            const a = row.querySelector('a.dl'), cs = getComputedStyle(a), hint = row.querySelector('.hint');
+            const leader = row.querySelector('.leader');
+            return { os: row.dataset.os, text: a.innerText.trim(), aria: a.getAttribute('aria-label') || '',
+                     bg: cs.backgroundColor, border: parseFloat(cs.borderTopWidth), height: Math.round(a.getBoundingClientRect().height),
+                     hint: !!(hint && hint.offsetParent), leader: !!(leader && leader.offsetParent) }; })""")
+        accent = await page.evaluate("getComputedStyle(document.querySelector('#hero-download')).backgroundColor")
+        short = await page.evaluate("window.KS_I18N.it.dl_btn_short")
+        await shot(page, "phone_downloads")
+        await browser.close()
+        for r in rows:
+            want = short if r["os"] != "ios" else None
+            if want and r["text"] != want:
+                problems.append(f"{r['os']}: il pulsante deve dire {want!r}, dice {r['text']!r}")
+            if r["os"] != "ios" and not re.search(r"\.(exe|dmg|apk)|AppImage", r["aria"]):
+                problems.append(f"{r['os']}: il nome del file deve restare per i lettori di schermo (aria-label {r['aria']!r})")
+            if r["height"] < 44:
+                problems.append(f"{r['os']}: pulsante troppo basso ({r['height']} px)")
+            filled = r["bg"] == accent
+            if r["os"] == "android" and not filled:
+                problems.append(f"android (il tuo): il pulsante deve essere pieno come quello grande ({r['bg']} ≠ {accent})")
+            if r["os"] != "android" and (filled or r["border"] < 1):
+                problems.append(f"{r['os']}: gli altri pulsanti vanno solo bordati (sfondo {r['bg']}, bordo {r['border']})")
+            if r["hint"] != (r["os"] == "android"):
+                problems.append(f"{r['os']}: la nota si vede solo per il proprio dispositivo (visibile: {r['hint']})")
+            if r["leader"]:
+                problems.append(f"{r['os']}: sul telefono niente puntini di guida")
+        browser, ctx, page = await open_site(p, site, os_="win")
+        desk = await page.evaluate("document.querySelector('#downloads [data-os=\"win\"] a.dl').innerText.trim()")
+        await browser.close()
+        if desk != "Scarica .exe":
+            problems.append(f"Su computer il pulsante resta 'Scarica .exe', dice {desk!r}")
+    assert not problems, "\n".join(problems)
+
+
 def test_workflow_tests_then_publishes_only_the_site():
     """Il workflow pubblica su GitHub Pages solo dopo che questi test sono passati, solo dal ramo
     main e solo la cartella site/ (i test non finiscono online). Il download di Chromium ritenta

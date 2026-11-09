@@ -40,7 +40,7 @@
       <a class="nav-link" href="#chapters" data-i18n="nav_chapters">Chapters</a>
       <a class="nav-link" href="https://github.com/GabrieleTrovato01/KoreShelf">GitHub</a>
       <label class="sr-only" for="lang" data-i18n="lang_label">Language</label>
-      <select id="lang" class="lang">
+      <select id="lang" class="lang" data-i18n-attr="aria-label:lang_label" aria-label="Language">
         <option value="it">Italiano</option>
         <option value="en" selected>English</option>
         <option value="de">Deutsch</option>
@@ -71,7 +71,8 @@
 
   <div class="ornament" aria-hidden="true"><span></span>❦<span></span></div>
 
-  <section id="chapters" class="wrap chapters">
+  <div class="chapters-band">
+  <section id="chapters" class="wrap chapters" data-i18n-attr="aria-label:nav_chapters" aria-label="Chapters">
     <article class="chapter">
       <div class="chapter-text">
         <p class="label" data-i18n="ch1_label">Chapter I</p>
@@ -103,6 +104,19 @@
       <p data-i18n="ch3_text">You don’t need to create an account and there’s no subscription. Your books stay in a folder on your computer or phone and aren’t uploaded to the internet. The code is public on GitHub, under the MIT license.</p>
     </article>
   </section>
+  <div class="carousel-controls">
+    <div class="carousel-dots">
+      <button type="button" data-i18n-attr="aria-label:carousel_goto_1" aria-label="Go to chapter 1" aria-current="true"></button>
+      <button type="button" data-i18n-attr="aria-label:carousel_goto_2" aria-label="Go to chapter 2"></button>
+      <button type="button" data-i18n-attr="aria-label:carousel_goto_3" aria-label="Go to chapter 3"></button>
+    </div>
+    <button type="button" id="carousel-pause" class="icon-btn" aria-label="Pause automatic scrolling">
+      <svg class="i-pause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+      <svg class="i-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+  </div>
+  <p class="swipe-hint" data-i18n="swipe_hint">Swipe with your finger, like in the app</p>
+  </div>
 
   <section id="downloads" class="downloads">
     <div class="narrow">
@@ -112,19 +126,19 @@
       </div>
       <ol class="index">
         <li data-os="win">
-          <div class="entry"><span class="os" data-i18n="os_win">Windows</span><span class="badge" data-i18n="yours">your device</span><span class="leader" aria-hidden="true"></span><a class="dl" href="https://github.com/GabrieleTrovato01/KoreShelf/releases/latest" data-i18n="dl_btn_win">Download .exe</a></div>
+          <div class="entry"><span class="os" data-i18n="os_win">Windows</span><span class="badge" data-i18n="yours">your device</span><span class="leader" aria-hidden="true"></span><a class="dl" href="https://github.com/GabrieleTrovato01/KoreShelf/releases/latest" data-i18n-attr="aria-label:dl_btn_win" aria-label="Download .exe"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span class="dl-long" data-i18n="dl_btn_win">Download .exe</span><span class="dl-short" data-i18n="dl_btn_short">Download</span></a></div>
           <p class="hint" data-i18n="hint_win">Windows 10 and 11. On first launch: More info › Run anyway.</p>
         </li>
         <li data-os="mac">
-          <div class="entry"><span class="os" data-i18n="os_mac">Mac</span><span class="badge" data-i18n="yours">your device</span><span class="leader" aria-hidden="true"></span><a class="dl" href="https://github.com/GabrieleTrovato01/KoreShelf/releases/latest" data-i18n="dl_btn_mac">Download .dmg</a></div>
+          <div class="entry"><span class="os" data-i18n="os_mac">Mac</span><span class="badge" data-i18n="yours">your device</span><span class="leader" aria-hidden="true"></span><a class="dl" href="https://github.com/GabrieleTrovato01/KoreShelf/releases/latest" data-i18n-attr="aria-label:dl_btn_mac" aria-label="Download .dmg"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span class="dl-long" data-i18n="dl_btn_mac">Download .dmg</span><span class="dl-short" data-i18n="dl_btn_short">Download</span></a></div>
           <p class="hint" data-i18n="hint_mac">Apple silicon and Intel. Drag the app to Applications; on first launch: System Settings › Privacy &amp; Security › Open Anyway.</p>
         </li>
         <li data-os="linux">
-          <div class="entry"><span class="os" data-i18n="os_linux">Linux</span><span class="badge" data-i18n="yours">your device</span><span class="leader" aria-hidden="true"></span><a class="dl" href="https://github.com/GabrieleTrovato01/KoreShelf/releases/latest" data-i18n="dl_btn_linux">Download AppImage</a></div>
+          <div class="entry"><span class="os" data-i18n="os_linux">Linux</span><span class="badge" data-i18n="yours">your device</span><span class="leader" aria-hidden="true"></span><a class="dl" href="https://github.com/GabrieleTrovato01/KoreShelf/releases/latest" data-i18n-attr="aria-label:dl_btn_linux" aria-label="Download AppImage"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span class="dl-long" data-i18n="dl_btn_linux">Download AppImage</span><span class="dl-short" data-i18n="dl_btn_short">Download</span></a></div>
           <p class="hint" data-i18n="hint_linux">Recent distributions. Make the file executable (Properties › Allow executing file as program) and open it.</p>
         </li>
         <li data-os="android">
-          <div class="entry"><span class="os" data-i18n="os_android">Android</span><span class="badge" data-i18n="yours">your device</span><span class="leader" aria-hidden="true"></span><a class="dl" href="https://github.com/GabrieleTrovato01/KoreShelf/releases/latest" data-i18n="dl_btn_android">Download .apk</a></div>
+          <div class="entry"><span class="os" data-i18n="os_android">Android</span><span class="badge" data-i18n="yours">your device</span><span class="leader" aria-hidden="true"></span><a class="dl" href="https://github.com/GabrieleTrovato01/KoreShelf/releases/latest" data-i18n-attr="aria-label:dl_btn_android" aria-label="Download .apk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span class="dl-long" data-i18n="dl_btn_android">Download .apk</span><span class="dl-short" data-i18n="dl_btn_short">Download</span></a></div>
           <p class="hint" data-i18n="hint_android">Open the file on your phone and, if asked, allow installing unknown apps.</p>
         </li>
         <li data-os="ios">
